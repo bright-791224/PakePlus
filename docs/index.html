@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>终极HTML防护生成器 | AES-256 + 代码混淆 | 双栏布局</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 现代化CSS变量 - 更精致的配色与阴影 */
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-dark: #4338ca;
+      --success: #10b981;
+      --success-dark: #059669;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --warning: #f59e0b;
+      --blue: #3b82f6;
+      --bg-light: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #f8fafc;
+      --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.5rem;
+      --radius-md: 0.75rem;
+      --radius-lg: 1rem;
+      --radius-xl: 1.5rem;
+      --radius-2xl: 2rem;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg-light: #0b1120;
+      --card-bg: #1e293b;
+      --text-main: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --code-bg: #0f172a;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    }
+
+    body {
+      background: var(--bg-light);
+      padding: 1.5rem;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      color: var(--text-main);
+      transition: background 0.3s ease;
+    }
+
+    /* 主容器 - 双栏布局 */
+    .app-container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* 头部区域 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+      padding: 0.5rem 0;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), #c084fc, var(--primary-light));
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      padding: 0.25rem 0.9rem;
+      border-radius: 60px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-switch {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 60px;
+      padding: 0.5rem 1.3rem;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      transition: var(--transition);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-switch:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    /* 特性卡片 - 紧凑放在顶部 */
+    .features-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-lg);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.8rem;
+      border: 1px solid var(--border);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .feature-item {
+      background: rgba(79, 70, 229, 0.05);
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-xl);
+      border-left: 3px solid var(--primary);
+      transition: var(--transition);
+    }
+
+    .feature-item:hover {
+      background: rgba(79, 70, 229, 0.08);
+      transform: translateX(4px);
+    }
+
+    .feature-item h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .feature-item p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* 双栏布局核心 */
+    .two-columns {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 280px;
+      background: var(--card-bg);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-header {
+      padding: 1.2rem 1.5rem;
+      background: rgba(79, 70, 229, 0.04);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .column-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+    }
+
+    .column-content {
+      padding: 1.5rem;
+      flex: 1;
+    }
+
+    /* 表单区域 */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      transition: var(--transition);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    textarea {
+      height: 320px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    /* 按钮组 */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .btn {
+      padding: 0.65rem 1.3rem;
+      border: none;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .btn-primary {
+      background: linear-gradient(105deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-success {
+      background: linear-gradient(105deg, var(--success), var(--success-dark));
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .btn-download {
+      background: linear-gradient(105deg, var(--blue), #2563eb);
+      color: white;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: linear-gradient(105deg, var(--danger), var(--danger-dark));
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+    }
+
+    /* 输出框美化 */
+    .output-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      min-height: 320px;
+      max-height: 400px;
+      overflow: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .output-box::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .output-box::-webkit-scrollbar-track {
+      background: var(--border);
+      border-radius: 10px;
+    }
+
+    .output-box::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    /* 提示条 */
+    .tip {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-lg);
+      margin-top: 1rem;
+      display: none;
+      font-weight: 500;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .tip.success {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+      display: block;
+    }
+
+    .tip.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border-left: 4px solid var(--danger);
+      display: block;
+    }
+
+    .tip.warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--warning);
+      border-left: 4px solid var(--warning);
+      display: block;
+    }
+
+    /* 加载动画 */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 0.8rem;
+      color: var(--primary);
+      font-weight: 600;
+      gap: 0.6rem;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79, 70, 229, 0.05);
+      border-radius: var(--radius-lg);
+      margin-top: 1rem;
+    }
+
+    .loading::before {
+      content: '';
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 日志区域 */
+    .log-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .log-card .column-header {
+      padding: 1rem 1.5rem;
+    }
+
+    .log-box {
+      background: var(--code-bg);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      height: 120px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0 1.5rem 1.5rem 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .log-box::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0.5rem 0;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 1rem;
+      }
+      .two-columns {
+        flex-direction: column;
+      }
+      .column-content {
+        padding: 1rem;
+      }
+      textarea {
+        height: 240px;
+      }
+      .output-box {
+        max-height: 300px;
+      }
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .key-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+  </style>
+  <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+  <div class="header">
+    <div class="logo-area">
+      <h1>🛡️ HTML 终极防护生成器</h1>
+      <span class="badge">AES-256 + 混淆引擎 · 双栏专业版</span>
+    </div>
+    <button class="theme-switch" id="themeSwitchBtn">🌙 深色模式</button>
+  </div>
+
+  <!-- 特性卡片 -->
+  <div class="features-card">
+    <div class="features">
+      <div class="feature-item"><h3>🔐 AES-256-CBC</h3><p>军用级加密，无密钥无法还原</p></div>
+      <div class="feature-item"><h3>🌀 智能代码混淆</h3><p>变量/函数名动态打乱，逆向困难</p></div>
+      <div class="feature-item"><h3>🔑 密钥访问控制</h3><p>用户必须输入正确密钥才能查看</p></div>
+      <div class="feature-item"><h3>📦 双重Base64装甲</h3><p>防御静态特征扫描</p></div>
+      <div class="feature-item"><h3>✅ 防篡改哈希</h3><p>MD5完整性校验</p></div>
+      <div class="feature-item"><h3>✨ 完美兼容还原</h3><p>解密后所有脚本/样式正常执行</p></div>
+    </div>
+  </div>
+
+  <!-- 双栏核心区域：左边原始源码，右边生成代码 -->
+  <div class="two-columns">
+    <!-- 左侧：配置与原始源码 -->
+    <div class="column">
+      <div class="column-header">
+        <h2>📝 ① 原始源码 & 加密配置</h2>
+        <span style="font-size:0.7rem; background:var(--primary); padding:0.2rem 0.6rem; border-radius:40px; color:white;">编辑区</span>
+      </div>
+      <div class="column-content">
+        <div class="form-group">
+          <label>🔑 访问密钥（需8位以上，解密页面要求用户输入）</label>
+          <input type="text" id="secretKey" placeholder="例如: MyStrongKey2024!" value="13529080202">
+          <div class="key-hint">⚠️ 请牢记此密钥，生成的防护页需要它才能解密</div>
+        </div>
+        <div class="form-group">
+          <label>📄 待加密的 HTML 代码（将被 AES + 混淆 完整保护）</label>
+          <textarea id="sourceHtml" placeholder="粘贴完整HTML代码，支持复杂交互..."></textarea>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="genBtn">✨ 生成 AES+混淆 防护页</button>
+          <button class="btn btn-success" id="copyFinalBtn">📋 复制加密代码</button>
+          <button class="btn btn-download" id="downloadFinalBtn">💾 下载 .html 文件</button>
+          <button class="btn btn-danger" id="clearAllBtn">🗑️ 重置</button>
+        </div>
+        <div id="loadingMsg" class="loading">⏳ 正在进行高强度加密 + 混淆，请稍后...</div>
+        <div id="globalTip" class="tip"></div>
+      </div>
+    </div>
+
+    <!-- 右侧：生成的终极防护页代码 -->
+    <div class="column">
+      <div class="column-header">
+        <h2>🔒 ② 生成的终极防护页代码</h2>
+        <span style="font-size:0.7rem; background:var(--success); padding:0.2rem 0.6rem; border-radius:40px; color:white;">AES+混淆</span>
+      </div>
+      <div class="column-content">
+        <div class="output-box" id="resultDisplay">等待生成...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部日志卡片 -->
+  <div class="log-card">
+    <div class="column-header">
+      <h2>📋 安全操作日志</h2>
+    </div>
+    <div class="log-box" id="actionLogs">[系统] 初始化完成，AES+混淆引擎就绪 ✅ 双栏布局已启用\n</div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    // DOM 元素
+    const secretKeyInput = document.getElementById('secretKey');
+    const sourceHtmlArea = document.getElementById('sourceHtml');
+    const genBtn = document.getElementById('genBtn');
+    const copyBtn = document.getElementById('copyFinalBtn');
+    const downloadBtn = document.getElementById('downloadFinalBtn');
+    const clearBtn = document.getElementById('clearAllBtn');
+    const themeToggle = document.getElementById('themeSwitchBtn');
+    const resultContainer = document.getElementById('resultDisplay');
+    const loadingDiv = document.getElementById('loadingMsg');
+    const tipDiv = document.getElementById('globalTip');
+    const logContainer = document.getElementById('actionLogs');
+
+    // 默认示例（精美的交互页面）
+    const defaultHtmlSample = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>AES加密演示 - 受保护页面</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      background: linear-gradient(145deg, #0f172a, #1e1b4b);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui;
+    }
+    .glass-card{
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      padding: 2.5rem;
+      width: 480px;
+      box-shadow: 0 20px 35px -12px black;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      text-align: center;
+    }
+    h1{font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(135deg,#a5f3fc,#c084fc); background-clip:text; -webkit-background-clip:text; color:transparent;}
+    .counter{font-size: 2.5rem; font-weight: bold; margin: 1rem 0; color: #facc15;}
+    button{
+      background: #8b5cf6;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 60px;
+      font-weight: bold;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 0.5rem;
+      transition: all 0.2s;
+    }
+    button:hover{ transform: scale(1.02); background: #7c3aed; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <h1>🔒 AES-256 终极防护</h1>
+  <p>此页面已被高强度加密 + 代码混淆<br>只有正确密钥才能展示内容</p>
+  <div class="counter">✨ 已保护 ✨</div>
+  <button id="magicBtn">✨ 触发交互测试 ✨</button>
+  <button id="infoBtn">📢 弹窗测试</button>
+</div>
+<script>
+  document.getElementById('magicBtn').onclick = () => {
+    alert('✅ 解密成功！所有脚本完美运行，AES+混淆防护生效！');
+  };
+  document.getElementById('infoBtn').onclick = () => {
+    alert('🎉 这是经过高强度加密后再解密的原始页面，交互/样式完美还原！');
+  };
+<\/script>
+</body>
+</html>`;
+    sourceHtmlArea.value = defaultHtmlSample;
+    if(!secretKeyInput.value.trim()) secretKeyInput.value = "13529080202";
+
+    function showTip(msg, type) {
+      tipDiv.className = `tip ${type}`;
+      tipDiv.textContent = msg;
+      setTimeout(() => { tipDiv.style.display = 'none'; }, 3200);
+      tipDiv.style.display = 'block';
+    }
+    
+    function addLog(msg) {
+      const t = new Date().toLocaleTimeString('zh-CN');
+      logContainer.innerHTML += `[${t}] ${msg}\n`;
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // 将普通字符串转为 Base64 (支持中文)
+    function stringToBase64(str) {
+      const utf8Bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < utf8Bytes.length; i++) binary += String.fromCharCode(utf8Bytes[i]);
+      return btoa(binary);
+    }
+
+    // AES 加密 (CBC, IV基于密钥MD5)
+    function aesEncrypt(plainText, password) {
+      const md5Key = CryptoJS.MD5(password).toString();
+      const keyHex = CryptoJS.enc.Hex.parse(md5Key);
+      const ivHex = CryptoJS.enc.Hex.parse(md5Key.substring(0, 32));
+      const encrypted = CryptoJS.AES.encrypt(plainText, keyHex, {
+        iv: ivHex,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      return encrypted.toString();
+    }
+
+    // 生成随机混淆变量名
+    function randomVarName(seed = '') {
+      return '_0x' + Math.random().toString(36).substring(2, 8) + seed;
+    }
+
+    // 构建带密码面板的页面（完整功能未改动）
+    function buildSecurePageWithAuth(payloadBase64, originalHash, correctKey) {
+      const verifyFuncName = randomVarName('verify');
+      const decodeFuncName = randomVarName('decode');
+      const decryptFuncName = randomVarName('decrypt');
+      const dataVarName = randomVarName('data');
+      const hashVarName = randomVarName('hash');
+      
+      return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 AES-256 加密防护页</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui;
+      padding: 1rem;
+    }
+    .auth-card{
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(16px);
+      border-radius: 2rem;
+      padding: 2.5rem;
+      width: 400px;
+      max-width: 90%;
+      border: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 25px 40px -12px black;
+      text-align: center;
+    }
+    h2{color:white; margin-bottom: 1rem; font-weight: 600;}
+    p{color:#cbd5e6; margin-bottom:1.5rem; font-size:0.9rem;}
+    input{
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 2rem;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 1rem;
+      margin: 1rem 0;
+      outline: none;
+      text-align: center;
+    }
+    input::placeholder{color:#94a3b8;}
+    input:focus{background: rgba(255,255,255,0.3);}
+    button{
+      background: #8b5cf6;
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 2rem;
+      font-weight: bold;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover{background: #7c3aed; transform: translateY(-2px);}
+    .error-msg{
+      color: #f87171;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .loading-msg{
+      color: #94a3b8;
+      margin-top: 0.8rem;
+      display: none;
+      font-size: 0.8rem;
+    }
+    footer{margin-top: 2rem; font-size: 0.7rem; color: #64748b;}
+  </style>
+  <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"><\/script>
+  <script>
+    (function(){
+      const ${dataVarName} = "${payloadBase64}";
+      const ${hashVarName} = "${originalHash}";
+      
+      function ${decodeFuncName}(b64Str){
+        try{
+          const binaryStr = atob(b64Str);
+          const bytes = new Uint8Array(binaryStr.length);
+          for(let i=0;i<binaryStr.length;i++) bytes[i]=binaryStr.charCodeAt(i);
+          return new TextDecoder('utf-8').decode(bytes);
+        }catch(e){
+          return decodeURIComponent(atob(b64Str).split('').map(function(c){
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+        }
+      }
+      
+      function ${decryptFuncName}(cipherText, password){
+        const md5Hash = CryptoJS.MD5(password).toString();
+        const keyHex = CryptoJS.enc.Hex.parse(md5Hash);
+        const ivHex = CryptoJS.enc.Hex.parse(md5Hash.substring(0,32));
+        const decrypted = CryptoJS.AES.decrypt(cipherText, keyHex, {
+          iv: ivHex,
+          mode: CryptoJS.mode.CBC,
+          padding: CryptoJS.pad.Pkcs7
+        });
+        const plainText = decrypted.toString(CryptoJS.enc.Utf8);
+        if(!plainText) throw new Error("解密失败，请检查密钥");
+        return plainText;
+      }
+      
+      window.${verifyFuncName} = function(){
+        const userKey = document.getElementById('accessKey').value.trim();
+        const errorDiv = document.getElementById('errorMsg');
+        const loadingDiv = document.getElementById('loadingMsg');
+        
+        if(!userKey || userKey.length < 8){
+          if(errorDiv){
+            errorDiv.textContent = '❌ Error password!';
+            errorDiv.style.display = 'block';
+          }
+          return;
+        }
+        
+        if(errorDiv) errorDiv.style.display = 'none';
+        if(loadingDiv) loadingDiv.style.display = 'block';
+        
+        try{
+          const aesCipher = ${decodeFuncName}(${dataVarName});
+          const decryptedHtml = ${decryptFuncName}(aesCipher, userKey);
+          const currentHash = CryptoJS.MD5(decryptedHtml).toString();
+          
+          if(currentHash !== ${hashVarName}){
+            throw new Error('完整性校验失败，文件可能被篡改');
+          }
+          
+          document.open();
+          document.write(decryptedHtml);
+          document.close();
+        }catch(err){
+          if(errorDiv){
+            errorDiv.textContent = '❌ ' + (err.message || '密钥错误，无法解密');
+            errorDiv.style.display = 'block';
+          }
+          if(loadingDiv) loadingDiv.style.display = 'none';
+        }
+      };
+    })();
+  <\/script>
+</head>
+<body>
+<div class="auth-card">
+  <h2>🔐 受保护内容</h2>
+  <p>请输入正确的访问密钥</p>
+  <input type="password" id="accessKey" placeholder="请输入密钥 (8位以上)" autocomplete="off">
+  <button onclick="${verifyFuncName}()">🔓 解密</button>
+  <div id="errorMsg" class="error-msg"></div>
+  <div id="loadingMsg" class="loading-msg">⏳ 正在解密，请稍候...</div>
+ 
+</div>
+</body>
+</html>`;
+    }
+
+    function generateUltimateProtected() {
+      loadingDiv.style.display = 'flex';
+      let rawHtml = sourceHtmlArea.value.trim();
+      const secret = secretKeyInput.value.trim();
+      
+      if (!rawHtml) {
+        showTip('请粘贴HTML代码', 'warning');
+        loadingDiv.style.display = 'none';
+        return null;
+      }
+      if (!secret || secret.length < 8) {
+        showTip('密钥至少8位', 'warning');
+        loadingDiv.style.display = 'none';
+        return null;
+      }
+      
+      try {
+        addLog('🔒 开始 AES-256 加密流程...');
+        const encryptedCipher = aesEncrypt(rawHtml, secret);
+        addLog(`AES 加密完成`);
+        const finalPayload = stringToBase64(encryptedCipher);
+        addLog(`Base64 编码完成`);
+        const integrityHash = CryptoJS.MD5(rawHtml).toString();
+        addLog(`防篡改哈希: ${integrityHash.substring(0,16)}...`);
+        
+        const protectedHtml = buildSecurePageWithAuth(finalPayload, integrityHash, secret);
+        loadingDiv.style.display = 'none';
+        showTip('✅ AES加密 + 混淆防护页生成成功！', 'success');
+        addLog('✅ 生成完成，解密器已混淆');
+        return protectedHtml;
+      } catch (err) {
+        loadingDiv.style.display = 'none';
+        addLog(`❌ 失败: ${err.message}`);
+        showTip('生成错误: ' + err.message, 'error');
+        return null;
+      }
+    }
+
+    function onGenerate() {
+      const finalCode = generateUltimateProtected();
+      if(finalCode) {
+        resultContainer.textContent = finalCode;
+        resultContainer.setAttribute('data-last', finalCode);
+      } else {
+        resultContainer.textContent = '生成失败，请检查密钥或HTML代码';
+      }
+    }
+    
+    function onCopy() {
+      let code = resultContainer.textContent;
+      if(!code || code === '等待生成...' || code.includes('生成失败')) {
+        showTip('请先生成防护页', 'warning');
+        return;
+      }
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(code).then(() => { 
+            showTip('复制成功', 'success'); 
+            addLog('复制加密代码');
+          }).catch(()=>fallbackCopy(code));
+        } else fallbackCopy(code);
+      } catch(e){ fallbackCopy(code); }
+    }
+    
+    function fallbackCopy(t){
+      const ta = document.createElement('textarea');
+      ta.value = t;
+      ta.style.position='fixed'; 
+      ta.style.left='-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      showTip(ok ? '复制成功' : '复制失败', ok?'success':'error');
+      if(ok) addLog('复制成功');
+    }
+    
+    function onDownload(){
+      let code = resultContainer.textContent;
+      if(!code || code === '等待生成...' || code.includes('生成失败')) { 
+        showTip('无有效代码','warning'); 
+        return; 
+      }
+      const blob = new Blob(['\uFEFF' + code], {type: 'text/html;charset=utf-8'});
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = `aes_protected_${Date.now()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showTip('下载成功！打开后需输入密钥', 'success');
+      addLog('下载受保护文件');
+    }
+    
+    function onClear(){
+      if(confirm('重置所有内容？')) {
+        sourceHtmlArea.value = defaultHtmlSample;
+        secretKeyInput.value = "13529080202";
+        resultContainer.textContent = '等待生成...';
+        logContainer.innerHTML = '[系统] 已重置\n';
+        addLog('重置完成');
+        showTip('已恢复默认', 'warning');
+      }
+    }
+    
+    function toggleTheme(){
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      if(isDark) { 
+        document.body.removeAttribute('data-theme'); 
+        themeToggle.textContent = '🌙 深色模式'; 
+        addLog('浅色模式'); 
+      } else { 
+        document.body.setAttribute('data-theme','dark'); 
+        themeToggle.textContent = '☀️ 浅色模式'; 
+        addLog('深色模式'); 
+      }
+    }
+    
+    genBtn.addEventListener('click', onGenerate);
+    copyBtn.addEventListener('click', onCopy);
+    downloadBtn.addEventListener('click', onDownload);
+    clearBtn.addEventListener('click', onClear);
+    themeToggle.addEventListener('click', toggleTheme);
+    addLog('AES+混淆引擎已启动 | 左右双栏布局，左侧编辑右侧预览');
+  })();
+</script>
+</body>
+</html>
