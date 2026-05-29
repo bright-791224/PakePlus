@@ -1,967 +1,916 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>终极HTML防护生成器 | AES-256 + 代码混淆 | 双栏布局</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Excel 智能拆分工具 | 完全离线版</title>
+    <!-- 本地 SheetJS 核心库（请确保 xlsx.full.min.js 在同一目录下） -->
+    <script src="xlsx.full.min.js"></script>
+    <!-- 本地 JSZip 库（请确保 jszip.min.js 在同一目录下） -->
+    <script src="jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    /* 现代化CSS变量 - 更精致的配色与阴影 */
-    :root {
-      --primary: #4f46e5;
-      --primary-light: #818cf8;
-      --primary-dark: #4338ca;
-      --success: #10b981;
-      --success-dark: #059669;
-      --danger: #ef4444;
-      --danger-dark: #dc2626;
-      --warning: #f59e0b;
-      --blue: #3b82f6;
-      --bg-light: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --code-bg: #f8fafc;
-      --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-      --radius-sm: 0.5rem;
-      --radius-md: 0.75rem;
-      --radius-lg: 1rem;
-      --radius-xl: 1.5rem;
-      --radius-2xl: 2rem;
-      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+        html, body {
+            height: auto;
+            min-height: 100vh;
+        }
 
-    [data-theme="dark"] {
-      --bg-light: #0b1120;
-      --card-bg: #1e293b;
-      --text-main: #f1f5f9;
-      --text-secondary: #cbd5e1;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --code-bg: #0f172a;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
-    }
+        body {
+            background: linear-gradient(145deg, #e8edf2 0%, #dce3ea 100%);
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, 'Inter', sans-serif;
+            padding: 28px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-    body {
-      background: var(--bg-light);
-      padding: 1.5rem;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-      color: var(--text-main);
-      transition: background 0.3s ease;
-    }
+        /* 背景装饰光晕 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle at 30% 40%, rgba(44, 95, 138, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-    /* 主容器 - 双栏布局 */
-    .app-container {
-      max-width: 1600px;
-      margin: 0 auto;
-    }
+        /* 主容器：左右分栏 */
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            gap: 28px;
+            align-items: stretch;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
 
-    /* 头部区域 */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.8rem;
-      padding: 0.5rem 0;
-    }
+        /* 左侧配置面板 */
+        .config-panel {
+            flex: 0 0 auto;
+            width: 380px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    .logo-area {
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
+        /* 右侧预览面板 */
+        .preview-panel {
+            flex: 1;
+            min-width: 480px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .preview-panel:hover {
+            box-shadow: 0 24px 48px -14px rgba(0, 0, 0, 0.25);
+        }
 
-    h1 {
-      font-size: 1.7rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), #c084fc, var(--primary-light));
-      background-size: 200% auto;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      letter-spacing: -0.02em;
-    }
+        /* 通用卡片样式 - 立体感 */
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255,255,255,0.8) inset, 0 -1px 0 rgba(0,0,0,0.02) inset;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform 0.25s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 32px -12px rgba(0, 0, 0, 0.18);
+        }
 
-    .badge {
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      color: white;
-      padding: 0.25rem 0.9rem;
-      border-radius: 60px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      box-shadow: var(--shadow-sm);
-    }
+        .card-header {
+            padding: 14px 22px;
+            background: linear-gradient(135deg, #f8fafd 0%, #f0f4f9 100%);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .theme-switch {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 60px;
-      padding: 0.5rem 1.3rem;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      transition: var(--transition);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
 
-    .theme-switch:hover {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
+        .card-header-icon {
+            font-size: 1.25rem;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+        }
 
-    /* 特性卡片 - 紧凑放在顶部 */
-    .features-card {
-      background: var(--card-bg);
-      border-radius: var(--radius-2xl);
-      box-shadow: var(--shadow-lg);
-      padding: 1.2rem 1.5rem;
-      margin-bottom: 1.8rem;
-      border: 1px solid var(--border);
-    }
+        .card-body {
+            padding: 18px 22px;
+        }
 
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
+        /* 上传区域 - 立体感 */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fefefe 0%, #fafcff 100%);
+            text-align: center;
+            padding: 16px 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02);
+        }
 
-    .feature-item {
-      background: rgba(79, 70, 229, 0.05);
-      padding: 0.8rem 1rem;
-      border-radius: var(--radius-xl);
-      border-left: 3px solid var(--primary);
-      transition: var(--transition);
-    }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: #2c5f8a;
+            background: linear-gradient(135deg, #f5f9ff 0%, #ecf3fa 100%);
+            transform: scale(1.01);
+            box-shadow: 0 6px 14px -6px rgba(44, 95, 138, 0.2);
+        }
 
-    .feature-item:hover {
-      background: rgba(79, 70, 229, 0.08);
-      transform: translateX(4px);
-    }
+        .upload-icon {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+            color: #475569;
+            transition: transform 0.2s ease;
+        }
+        .upload-zone:hover .upload-icon {
+            transform: translateY(-2px);
+        }
 
-    .feature-item h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin-bottom: 0.2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
+        .upload-text {
+            font-size: 0.8rem;
+            color: #475569;
+        }
 
-    .feature-item p {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
+        .file-badge {
+            background: linear-gradient(135deg, #eef2ff 0%, #e6edf8 100%);
+            padding: 5px 14px;
+            border-radius: 24px;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2c5f8a;
+            display: inline-block;
+            word-break: break-all;
+            max-width: 100%;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+        }
 
-    /* 双栏布局核心 */
-    .two-columns {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.8rem;
-      flex-wrap: wrap;
-    }
+        .form-group {
+            margin-bottom: 18px;
+        }
 
-    .column {
-      flex: 1;
-      min-width: 280px;
-      background: var(--card-bg);
-      border-radius: var(--radius-2xl);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #334155;
+            display: block;
+            margin-bottom: 8px;
+        }
 
-    .column-header {
-      padding: 1.2rem 1.5rem;
-      background: rgba(79, 70, 229, 0.04);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-    }
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: white;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .form-group input[type="number"]:focus {
+            outline: none;
+            border-color: #2c5f8a;
+            box-shadow: 0 0 0 3px rgba(44, 95, 138, 0.12), inset 0 1px 2px rgba(0,0,0,0.04);
+            transform: scale(1.01);
+        }
 
-    .column-header h2 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin: 0;
-    }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
 
-    .column-content {
-      padding: 1.5rem;
-      flex: 1;
-    }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 5px 12px;
+            border-radius: 24px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+        }
 
-    /* 表单区域 */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
+        .checkbox-item:hover {
+            background: linear-gradient(135deg, #eef2ff 0%, #e6edf8 100%);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
 
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.6rem;
-      color: var(--text-main);
-      font-size: 0.85rem;
-    }
+        .radio-group-horizontal {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
 
-    input, textarea {
-      width: 100%;
-      background: var(--code-bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      transition: var(--transition);
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #334155;
+            transition: all 0.2s ease;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        .radio-item:hover {
+            background: rgba(44, 95, 138, 0.06);
+            transform: translateX(2px);
+        }
 
-    textarea {
-      height: 320px;
-      resize: vertical;
-      line-height: 1.5;
-    }
+        button {
+            background: linear-gradient(135deg, #2c5f8a 0%, #1e4a6e 100%);
+            border: none;
+            color: white;
+            padding: 9px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
 
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
+        button:hover {
+            background: linear-gradient(135deg, #1e4a6e 0%, #153d5a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px -6px rgba(30, 74, 110, 0.4);
+        }
 
-    /* 按钮组 */
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin: 1.5rem 0 0.5rem;
-    }
+        button:active {
+            transform: translateY(1px);
+        }
 
-    .btn {
-      padding: 0.65rem 1.3rem;
-      border: none;
-      border-radius: 60px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: var(--shadow-xs);
-    }
+        button.secondary {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e9eef3 100%);
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        button.secondary:hover {
+            background: linear-gradient(135deg, #e9eef3 0%, #e2e8f0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.15);
+        }
 
-    .btn-primary {
-      background: linear-gradient(105deg, var(--primary), var(--primary-dark));
-      color: white;
-      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
-    }
+        button:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.05);
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
-    }
+        .action-bar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
 
-    .btn-success {
-      background: linear-gradient(105deg, var(--success), var(--success-dark));
-      color: white;
-    }
+        /* 右侧预览头部 */
+        .preview-header {
+            padding: 16px 24px 10px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
 
-    .btn-success:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.05);
-    }
+        /* 右侧操作栏卡片 */
+        .action-card {
+            background: linear-gradient(135deg, #f8fafd 0%, #f0f4fa 100%);
+            border-radius: 14px;
+            margin: 14px 20px;
+            padding: 14px 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 10px -6px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: all 0.25s ease;
+        }
+        .action-card:hover {
+            box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.12);
+        }
 
-    .btn-download {
-      background: linear-gradient(105deg, var(--blue), #2563eb);
-      color: white;
-    }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .output-section {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .output-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .output-section .radio-group-horizontal {
+            gap: 18px;
+        }
+        .output-section .radio-item {
+            font-size: 0.75rem;
+        }
+        .divider-vertical {
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, #cbd5e1, transparent);
+            margin: 0 6px;
+        }
+        .stats-inline {
+            background: linear-gradient(135deg, #eef2ff 0%, #e8edf8 100%);
+            padding: 5px 16px;
+            border-radius: 24px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #2c5f8a;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+        }
 
-    .btn-download:hover {
-      transform: translateY(-2px);
-    }
+        .tabs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 20px 12px 20px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
 
-    .btn-danger {
-      background: linear-gradient(105deg, var(--danger), var(--danger-dark));
-      color: white;
-    }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 7px 18px;
+            border-radius: 28px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
 
-    .btn-danger:hover {
-      transform: translateY(-2px);
-    }
+        .tab-btn:hover {
+            background: #f1f5f9;
+            color: #2c5f8a;
+            transform: translateY(-1px);
+        }
 
-    /* 输出框美化 */
-    .output-box {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1rem;
-      min-height: 320px;
-      max-height: 400px;
-      overflow: auto;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 0.75rem;
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.5;
-    }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #2c5f8a 0%, #1e4a6e 100%);
+            color: white;
+            box-shadow: 0 4px 10px -4px rgba(44, 95, 138, 0.4);
+        }
 
-    .output-box::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 0 20px 20px 20px;
+            max-height: 55vh;
+            min-height: 300px;
+        }
 
-    .output-box::-webkit-scrollbar-track {
-      background: var(--border);
-      border-radius: 10px;
-    }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
 
-    .output-box::-webkit-scrollbar-thumb {
-      background: var(--primary);
-      border-radius: 10px;
-    }
+        .data-table th, .data-table td {
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+            transition: background 0.15s ease;
+        }
 
-    /* 提示条 */
-    .tip {
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius-lg);
-      margin-top: 1rem;
-      display: none;
-      font-weight: 500;
-      font-size: 0.85rem;
-      backdrop-filter: blur(4px);
-    }
+        .data-table tr:hover td {
+            background: #f8fafc;
+        }
 
-    .tip.success {
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--success);
-      border-left: 4px solid var(--success);
-      display: block;
-    }
+        .data-table th {
+            background: linear-gradient(135deg, #f8fafd 0%, #f1f5f9 100%);
+            font-weight: 600;
+            color: #1e293b;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-bottom: 2px solid #e2e8f0;
+        }
 
-    .tip.error {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border-left: 4px solid var(--danger);
-      display: block;
-    }
+        .empty-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            background: linear-gradient(135deg, #fefefe, #fafcff);
+            border-radius: 16px;
+        }
 
-    .tip.warning {
-      background: rgba(245, 158, 11, 0.12);
-      color: var(--warning);
-      border-left: 4px solid var(--warning);
-      display: block;
-    }
+        .badge-info {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e9eef3 100%);
+            border-radius: 10px;
+            padding: 5px 12px;
+            font-size: 0.65rem;
+            display: inline-block;
+            margin-top: 8px;
+            color: #475569;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.02);
+        }
 
-    /* 加载动画 */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 0.8rem;
-      color: var(--primary);
-      font-weight: 600;
-      gap: 0.6rem;
-      align-items: center;
-      justify-content: center;
-      background: rgba(79, 70, 229, 0.05);
-      border-radius: var(--radius-lg);
-      margin-top: 1rem;
-    }
+        footer {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.65rem;
+            color: #94a3b8;
+            padding: 10px 0;
+            border-top: 1px solid rgba(203, 213, 225, 0.5);
+        }
+        
+        .select-file-btn {
+            margin-top: 10px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e9eef3 100%);
+            font-size: 0.75rem;
+            padding: 6px 18px;
+        }
 
-    .loading::before {
-      content: '';
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      display: inline-block;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* 日志区域 */
-    .log-card {
-      background: var(--card-bg);
-      border-radius: var(--radius-2xl);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--border);
-      margin-bottom: 0;
-    }
-
-    .log-card .column-header {
-      padding: 1rem 1.5rem;
-    }
-
-    .log-box {
-      background: var(--code-bg);
-      border-radius: var(--radius-lg);
-      padding: 1rem;
-      height: 120px;
-      overflow-y: auto;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin: 0 1.5rem 1.5rem 1.5rem;
-      border: 1px solid var(--border);
-    }
-
-    .log-box::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 0.5rem 0;
-    }
-
-    @media (max-width: 900px) {
-      body {
-        padding: 1rem;
-      }
-      .two-columns {
-        flex-direction: column;
-      }
-      .column-content {
-        padding: 1rem;
-      }
-      textarea {
-        height: 240px;
-      }
-      .output-box {
-        max-height: 300px;
-      }
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .key-hint {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-  </style>
-  <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .card, .preview-panel {
+            animation: fadeInUp 0.4s ease-out;
+        }
+        
+        /* 离线状态提示 */
+        .offline-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #2c5f8a;
+            color: white;
+            font-size: 0.6rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            opacity: 0.7;
+            z-index: 100;
+        }
+        
+        @media (max-width: 950px) {
+            body {
+                padding: 16px;
+            }
+            .dashboard {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .config-panel {
+                width: 100%;
+            }
+            .preview-panel {
+                min-width: auto;
+            }
+            .table-wrapper {
+                max-height: 380px;
+            }
+            .action-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .divider-vertical {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="app-container">
-  <div class="header">
-    <div class="logo-area">
-      <h1>🛡️ HTML 终极防护生成器</h1>
-      <span class="badge">AES-256 + 混淆引擎 · 双栏专业版</span>
-    </div>
-    <button class="theme-switch" id="themeSwitchBtn">🌙 深色模式</button>
-  </div>
-
-  <!-- 特性卡片 -->
-  <div class="features-card">
-    <div class="features">
-      <div class="feature-item"><h3>🔐 AES-256-CBC</h3><p>军用级加密，无密钥无法还原</p></div>
-      <div class="feature-item"><h3>🌀 智能代码混淆</h3><p>变量/函数名动态打乱，逆向困难</p></div>
-      <div class="feature-item"><h3>🔑 密钥访问控制</h3><p>用户必须输入正确密钥才能查看</p></div>
-      <div class="feature-item"><h3>📦 双重Base64装甲</h3><p>防御静态特征扫描</p></div>
-      <div class="feature-item"><h3>✅ 防篡改哈希</h3><p>MD5完整性校验</p></div>
-      <div class="feature-item"><h3>✨ 完美兼容还原</h3><p>解密后所有脚本/样式正常执行</p></div>
-    </div>
-  </div>
-
-  <!-- 双栏核心区域：左边原始源码，右边生成代码 -->
-  <div class="two-columns">
-    <!-- 左侧：配置与原始源码 -->
-    <div class="column">
-      <div class="column-header">
-        <h2>📝 ① 原始源码 & 加密配置</h2>
-        <span style="font-size:0.7rem; background:var(--primary); padding:0.2rem 0.6rem; border-radius:40px; color:white;">编辑区</span>
-      </div>
-      <div class="column-content">
-        <div class="form-group">
-          <label>🔑 访问密钥（需8位以上，解密页面要求用户输入）</label>
-          <input type="text" id="secretKey" placeholder="例如: MyStrongKey2024!" value="13529080202">
-          <div class="key-hint">⚠️ 请牢记此密钥，生成的防护页需要它才能解密</div>
+<div class="dashboard">
+    <!-- 左侧：配置区 -->
+    <div class="config-panel">
+        <!-- 卡片1: 数据源与表头 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">📂</span>
+                <h2>数据源与表头设置</h2>
+            </div>
+            <div class="card-body">
+                <div id="uploadZone" class="upload-zone">
+                    <div class="upload-icon">📎</div>
+                    <div class="upload-text">拖拽或点击上传 Excel 文件</div>
+                    <button type="button" id="selectFileBtn" class="secondary select-file-btn">选择文件</button>
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .xlsm" style="display:none" />
+                    <div id="fileInfo" class="file-badge"></div>
+                </div>
+                <div class="form-group" style="margin-top: 14px;">
+                    <label>表头行数（完整保留前N行）</label>
+                    <input type="number" id="headerRowsCount" min="1" max="20" value="1" step="1">
+                    <div class="badge-info">拆分后完整保留这N行表头，数据从第N+1行开始</div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-          <label>📄 待加密的 HTML 代码（将被 AES + 混淆 完整保护）</label>
-          <textarea id="sourceHtml" placeholder="粘贴完整HTML代码，支持复杂交互..."></textarea>
+
+        <!-- 卡片2: 拆分规则 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">✂️</span>
+                <h2>拆分规则</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>拆分依据列（单选）</label>
+                    <div id="splitColumnsCheckbox" class="checkbox-group">
+                        <span style="color:#94a3b8; font-size:0.7rem;">等待上传文件后加载列</span>
+                    </div>
+                    <div class="badge-info" style="margin-top: 5px;">根据所选列的不同值进行分组拆分</div>
+                </div>
+                <div class="form-group">
+                    <label>要导出的列（多选）</label>
+                    <div id="exportColumnsCheckbox" class="checkbox-group">
+                        <span style="color:#94a3b8; font-size:0.7rem;">等待上传文件后加载列</span>
+                    </div>
+                    <div class="badge-info">未勾选的列将从结果中移除</div>
+                </div>
+            </div>
         </div>
-        <div class="btn-group">
-          <button class="btn btn-primary" id="genBtn">✨ 生成 AES+混淆 防护页</button>
-          <button class="btn btn-success" id="copyFinalBtn">📋 复制加密代码</button>
-          <button class="btn btn-download" id="downloadFinalBtn">💾 下载 .html 文件</button>
-          <button class="btn btn-danger" id="clearAllBtn">🗑️ 重置</button>
-        </div>
-        <div id="loadingMsg" class="loading">⏳ 正在进行高强度加密 + 混淆，请稍后...</div>
-        <div id="globalTip" class="tip"></div>
-      </div>
     </div>
 
-    <!-- 右侧：生成的终极防护页代码 -->
-    <div class="column">
-      <div class="column-header">
-        <h2>🔒 ② 生成的终极防护页代码</h2>
-        <span style="font-size:0.7rem; background:var(--success); padding:0.2rem 0.6rem; border-radius:40px; color:white;">AES+混淆</span>
-      </div>
-      <div class="column-content">
-        <div class="output-box" id="resultDisplay">等待生成...</div>
-      </div>
+    <!-- 右侧：拆分预览区 -->
+    <div class="preview-panel">
+        <div class="preview-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1rem; font-weight: 600; color: #1e293b;">拆分预览</h2>
+                <button id="batchDownloadBtn" class="secondary" style="padding: 5px 18px; font-size: 0.7rem;">下载结果</button>
+            </div>
+        </div>
+        
+        <!-- 输出方式 + 执行操作卡片 -->
+        <div class="action-card">
+            <div class="action-row">
+                <div class="output-section">
+                    <span class="output-label">输出方式</span>
+                    <div class="radio-group-horizontal" id="outputTypeGroup">
+                        <label class="radio-item"><input type="radio" name="outputType" value="files" checked> 独立文件 (ZIP)</label>
+                        <label class="radio-item"><input type="radio" name="outputType" value="sheets"> 一个文件多Sheet</label>
+                    </div>
+                </div>
+                <div class="divider-vertical"></div>
+                <div class="action-bar">
+                    <button id="splitExecuteBtn" disabled>执行拆分</button>
+                    <button id="resetAllBtn" class="secondary">重置</button>
+                </div>
+                <div id="previewStats" class="stats-inline">未加载数据</div>
+            </div>
+        </div>
+        
+        <div class="tabs-container" id="resultTabs"></div>
+        <div class="table-wrapper" id="resultTableContainer">
+            <div class="empty-placeholder">上传 Excel 文件，选择拆分列后点击「执行拆分」</div>
+        </div>
     </div>
-  </div>
-
-  <!-- 底部日志卡片 -->
-  <div class="log-card">
-    <div class="column-header">
-      <h2>📋 安全操作日志</h2>
-    </div>
-    <div class="log-box" id="actionLogs">[系统] 初始化完成，AES+混淆引擎就绪 ✅ 双栏布局已启用\n</div>
-  </div>
 </div>
+<div class="offline-badge">✓ 完全离线版本</div>
 
 <script>
-  (function(){
-    // DOM 元素
-    const secretKeyInput = document.getElementById('secretKey');
-    const sourceHtmlArea = document.getElementById('sourceHtml');
-    const genBtn = document.getElementById('genBtn');
-    const copyBtn = document.getElementById('copyFinalBtn');
-    const downloadBtn = document.getElementById('downloadFinalBtn');
-    const clearBtn = document.getElementById('clearAllBtn');
-    const themeToggle = document.getElementById('themeSwitchBtn');
-    const resultContainer = document.getElementById('resultDisplay');
-    const loadingDiv = document.getElementById('loadingMsg');
-    const tipDiv = document.getElementById('globalTip');
-    const logContainer = document.getElementById('actionLogs');
-
-    // 默认示例（精美的交互页面）
-    const defaultHtmlSample = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>AES加密演示 - 受保护页面</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{
-      background: linear-gradient(145deg, #0f172a, #1e1b4b);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', system-ui;
+    // ========== 检查库文件是否加载成功 ==========
+    if (typeof XLSX === 'undefined') {
+        alert("错误：未找到 SheetJS 库文件 (xlsx.full.min.js)\n请确保该文件与HTML放在同一目录下！");
     }
-    .glass-card{
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(12px);
-      border-radius: 2rem;
-      padding: 2.5rem;
-      width: 480px;
-      box-shadow: 0 20px 35px -12px black;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: white;
-      text-align: center;
-    }
-    h1{font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(135deg,#a5f3fc,#c084fc); background-clip:text; -webkit-background-clip:text; color:transparent;}
-    .counter{font-size: 2.5rem; font-weight: bold; margin: 1rem 0; color: #facc15;}
-    button{
-      background: #8b5cf6;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 60px;
-      font-weight: bold;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      margin: 0.5rem;
-      transition: all 0.2s;
-    }
-    button:hover{ transform: scale(1.02); background: #7c3aed; }
-  </style>
-</head>
-<body>
-<div class="glass-card">
-  <h1>🔒 AES-256 终极防护</h1>
-  <p>此页面已被高强度加密 + 代码混淆<br>只有正确密钥才能展示内容</p>
-  <div class="counter">✨ 已保护 ✨</div>
-  <button id="magicBtn">✨ 触发交互测试 ✨</button>
-  <button id="infoBtn">📢 弹窗测试</button>
-</div>
-<script>
-  document.getElementById('magicBtn').onclick = () => {
-    alert('✅ 解密成功！所有脚本完美运行，AES+混淆防护生效！');
-  };
-  document.getElementById('infoBtn').onclick = () => {
-    alert('🎉 这是经过高强度加密后再解密的原始页面，交互/样式完美还原！');
-  };
-<\/script>
-</body>
-</html>`;
-    sourceHtmlArea.value = defaultHtmlSample;
-    if(!secretKeyInput.value.trim()) secretKeyInput.value = "13529080202";
-
-    function showTip(msg, type) {
-      tipDiv.className = `tip ${type}`;
-      tipDiv.textContent = msg;
-      setTimeout(() => { tipDiv.style.display = 'none'; }, 3200);
-      tipDiv.style.display = 'block';
+    if (typeof JSZip === 'undefined') {
+        alert("错误：未找到 JSZip 库文件 (jszip.min.js)\n请确保该文件与HTML放在同一目录下！");
     }
     
-    function addLog(msg) {
-      const t = new Date().toLocaleTimeString('zh-CN');
-      logContainer.innerHTML += `[${t}] ${msg}\n`;
-      logContainer.scrollTop = logContainer.scrollHeight;
-    }
+    // ========== 全局状态 ==========
+    let rawFileBuffer = null;           
+    let currentFileName = "";
+    let originalHeaderRows = [];        
+    let originalDataRows = [];          
+    let firstRowNames = [];             
+    let totalColumns = 0;
+    let splitGroups = [];               
 
-    // 将普通字符串转为 Base64 (支持中文)
-    function stringToBase64(str) {
-      const utf8Bytes = new TextEncoder().encode(str);
-      let binary = '';
-      for (let i = 0; i < utf8Bytes.length; i++) binary += String.fromCharCode(utf8Bytes[i]);
-      return btoa(binary);
-    }
+    // DOM 绑定
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInfoDiv = document.getElementById('fileInfo');
+    const headerRowsCountInput = document.getElementById('headerRowsCount');
+    const splitColumnsDiv = document.getElementById('splitColumnsCheckbox');
+    const exportColumnsDiv = document.getElementById('exportColumnsCheckbox');
+    const splitExecuteBtn = document.getElementById('splitExecuteBtn');
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const previewStatsSpan = document.getElementById('previewStats');
+    const resultTabs = document.getElementById('resultTabs');
+    const resultTableContainer = document.getElementById('resultTableContainer');
+    const batchDownloadBtn = document.getElementById('batchDownloadBtn');
 
-    // AES 加密 (CBC, IV基于密钥MD5)
-    function aesEncrypt(plainText, password) {
-      const md5Key = CryptoJS.MD5(password).toString();
-      const keyHex = CryptoJS.enc.Hex.parse(md5Key);
-      const ivHex = CryptoJS.enc.Hex.parse(md5Key.substring(0, 32));
-      const encrypted = CryptoJS.AES.encrypt(plainText, keyHex, {
-        iv: ivHex,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
-      });
-      return encrypted.toString();
-    }
-
-    // 生成随机混淆变量名
-    function randomVarName(seed = '') {
-      return '_0x' + Math.random().toString(36).substring(2, 8) + seed;
-    }
-
-    // 构建带密码面板的页面（完整功能未改动）
-    function buildSecurePageWithAuth(payloadBase64, originalHash, correctKey) {
-      const verifyFuncName = randomVarName('verify');
-      const decodeFuncName = randomVarName('decode');
-      const decryptFuncName = randomVarName('decrypt');
-      const dataVarName = randomVarName('data');
-      const hashVarName = randomVarName('hash');
-      
-      return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔐 AES-256 加密防护页</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{
-      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', system-ui;
-      padding: 1rem;
-    }
-    .auth-card{
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(16px);
-      border-radius: 2rem;
-      padding: 2.5rem;
-      width: 400px;
-      max-width: 90%;
-      border: 1px solid rgba(255,255,255,0.25);
-      box-shadow: 0 25px 40px -12px black;
-      text-align: center;
-    }
-    h2{color:white; margin-bottom: 1rem; font-weight: 600;}
-    p{color:#cbd5e6; margin-bottom:1.5rem; font-size:0.9rem;}
-    input{
-      width: 100%;
-      padding: 0.9rem;
-      border-radius: 2rem;
-      border: none;
-      background: rgba(255,255,255,0.2);
-      color: white;
-      font-size: 1rem;
-      margin: 1rem 0;
-      outline: none;
-      text-align: center;
-    }
-    input::placeholder{color:#94a3b8;}
-    input:focus{background: rgba(255,255,255,0.3);}
-    button{
-      background: #8b5cf6;
-      width: 100%;
-      padding: 0.8rem;
-      border: none;
-      border-radius: 2rem;
-      font-weight: bold;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover{background: #7c3aed; transform: translateY(-2px);}
-    .error-msg{
-      color: #f87171;
-      margin-top: 1rem;
-      font-size: 0.85rem;
-      display: none;
-    }
-    .loading-msg{
-      color: #94a3b8;
-      margin-top: 0.8rem;
-      display: none;
-      font-size: 0.8rem;
-    }
-    footer{margin-top: 2rem; font-size: 0.7rem; color: #64748b;}
-  </style>
-  <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"><\/script>
-  <script>
-    (function(){
-      const ${dataVarName} = "${payloadBase64}";
-      const ${hashVarName} = "${originalHash}";
-      
-      function ${decodeFuncName}(b64Str){
-        try{
-          const binaryStr = atob(b64Str);
-          const bytes = new Uint8Array(binaryStr.length);
-          for(let i=0;i<binaryStr.length;i++) bytes[i]=binaryStr.charCodeAt(i);
-          return new TextDecoder('utf-8').decode(bytes);
-        }catch(e){
-          return decodeURIComponent(atob(b64Str).split('').map(function(c){
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
+    // ========== 核心解析：完整保留多行表头 ==========
+    function parseExcelWithHeaderRows(buffer, headerRowCount) {
+        const workbook = XLSX.read(buffer, { type: 'array', cellDates: false, defval: "" });
+        if (!workbook.SheetNames.length) throw new Error("工作簿为空");
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+        if (!rawRows || rawRows.length < headerRowCount + 1) {
+            throw new Error(`数据不足：共${rawRows.length}行，表头设为${headerRowCount}行，至少需要${headerRowCount + 1}行`);
         }
-      }
-      
-      function ${decryptFuncName}(cipherText, password){
-        const md5Hash = CryptoJS.MD5(password).toString();
-        const keyHex = CryptoJS.enc.Hex.parse(md5Hash);
-        const ivHex = CryptoJS.enc.Hex.parse(md5Hash.substring(0,32));
-        const decrypted = CryptoJS.AES.decrypt(cipherText, keyHex, {
-          iv: ivHex,
-          mode: CryptoJS.mode.CBC,
-          padding: CryptoJS.pad.Pkcs7
+        
+        const headerRows = rawRows.slice(0, headerRowCount).map(row => [...row]);
+        const firstRow = headerRows[0] || [];
+        const displayNames = firstRow.map((cell, idx) => {
+            if (cell !== undefined && cell !== null && String(cell).trim() !== "") return String(cell).trim();
+            return `列_${idx + 1}`;
         });
-        const plainText = decrypted.toString(CryptoJS.enc.Utf8);
-        if(!plainText) throw new Error("解密失败，请检查密钥");
-        return plainText;
-      }
-      
-      window.${verifyFuncName} = function(){
-        const userKey = document.getElementById('accessKey').value.trim();
-        const errorDiv = document.getElementById('errorMsg');
-        const loadingDiv = document.getElementById('loadingMsg');
         
-        if(!userKey || userKey.length < 8){
-          if(errorDiv){
-            errorDiv.textContent = '❌ Error password!';
-            errorDiv.style.display = 'block';
-          }
-          return;
+        const dataRows = [];
+        for (let i = headerRowCount; i < rawRows.length; i++) {
+            const row = rawRows[i];
+            if (!row) continue;
+            const hasData = row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== "");
+            if (hasData) dataRows.push([...row]);
         }
         
-        if(errorDiv) errorDiv.style.display = 'none';
-        if(loadingDiv) loadingDiv.style.display = 'block';
+        const maxCols = Math.max(...headerRows.map(r => r.length), ...dataRows.map(r => r.length), displayNames.length);
+        const paddedHeaderRows = headerRows.map(row => { const newRow = [...row]; while(newRow.length < maxCols) newRow.push(""); return newRow; });
+        const paddedDataRows = dataRows.map(row => { const newRow = [...row]; while(newRow.length < maxCols) newRow.push(""); return newRow; });
+        while(displayNames.length < maxCols) displayNames.push(`列_${displayNames.length+1}`);
         
-        try{
-          const aesCipher = ${decodeFuncName}(${dataVarName});
-          const decryptedHtml = ${decryptFuncName}(aesCipher, userKey);
-          const currentHash = CryptoJS.MD5(decryptedHtml).toString();
-          
-          if(currentHash !== ${hashVarName}){
-            throw new Error('完整性校验失败，文件可能被篡改');
-          }
-          
-          document.open();
-          document.write(decryptedHtml);
-          document.close();
-        }catch(err){
-          if(errorDiv){
-            errorDiv.textContent = '❌ ' + (err.message || '密钥错误，无法解密');
-            errorDiv.style.display = 'block';
-          }
-          if(loadingDiv) loadingDiv.style.display = 'none';
+        return { headerRows: paddedHeaderRows, dataRows: paddedDataRows, displayNames, totalCols: maxCols };
+    }
+    
+    function reloadWithCurrentHeaderRows() {
+        if (!rawFileBuffer) return false;
+        const headerRowCount = parseInt(headerRowsCountInput.value, 10);
+        if (isNaN(headerRowCount) || headerRowCount < 1) { alert("表头行数至少为1"); return false; }
+        try {
+            const res = parseExcelWithHeaderRows(rawFileBuffer, headerRowCount);
+            originalHeaderRows = res.headerRows;
+            originalDataRows = res.dataRows;
+            firstRowNames = res.displayNames;
+            totalColumns = res.totalCols;
+            renderColumnSelectors();
+            updatePreviewStats();
+            splitExecuteBtn.disabled = false;
+            const shortName = currentFileName.length > 35 ? currentFileName.substring(0,32)+"..." : currentFileName;
+            fileInfoDiv.innerHTML = `已加载: ${shortName} | 表头:${headerRowCount}行 | 数据:${originalDataRows.length}行 | ${totalColumns}列`;
+            clearSplitResultsUI();
+            return true;
+        } catch(err) { alert("解析失败: " + err.message); return false; }
+    }
+    
+    function loadFile(file) {
+        const reader = new FileReader();
+        reader.onload = e => { rawFileBuffer = e.target.result; currentFileName = file.name; reloadWithCurrentHeaderRows(); };
+        reader.onerror = () => alert("读取失败");
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function renderColumnSelectors() {
+        if (!firstRowNames.length) {
+            splitColumnsDiv.innerHTML = "<span style='color:#94a3b8; font-size:0.7rem;'>等待上传文件后加载列</span>";
+            exportColumnsDiv.innerHTML = "<span style='color:#94a3b8; font-size:0.7rem;'>等待上传文件后加载列</span>";
+            return;
         }
-      };
-    })();
-  <\/script>
-</head>
-<body>
-<div class="auth-card">
-  <h2>🔐 受保护内容</h2>
-  <p>请输入正确的访问密钥</p>
-  <input type="password" id="accessKey" placeholder="请输入密钥 (8位以上)" autocomplete="off">
-  <button onclick="${verifyFuncName}()">🔓 解密</button>
-  <div id="errorMsg" class="error-msg"></div>
-  <div id="loadingMsg" class="loading-msg">⏳ 正在解密，请稍候...</div>
- 
-</div>
-</body>
-</html>`;
+        splitColumnsDiv.innerHTML = "";
+        firstRowNames.forEach((name, idx) => {
+            const label = document.createElement('label');
+            label.className = "checkbox-item";
+            const radio = document.createElement('input');
+            radio.type = "radio"; radio.name = "splitBaseColumn"; radio.value = idx;
+            const span = document.createElement('span'); span.innerText = name;
+            label.appendChild(radio); label.appendChild(span);
+            splitColumnsDiv.appendChild(label);
+        });
+        exportColumnsDiv.innerHTML = "";
+        const hint = document.createElement('div'); hint.style.width = "100%"; hint.style.fontSize = "0.65rem"; hint.style.color = "#64748b"; hint.innerText = "勾选需要保留的列";
+        exportColumnsDiv.appendChild(hint);
+        firstRowNames.forEach((name, idx) => {
+            const label = document.createElement('label');
+            label.className = "checkbox-item";
+            const cb = document.createElement('input'); cb.type = "checkbox"; cb.value = idx; cb.checked = true;
+            const span = document.createElement('span'); span.innerText = name;
+            label.appendChild(cb); label.appendChild(span);
+            exportColumnsDiv.appendChild(label);
+        });
     }
-
-    function generateUltimateProtected() {
-      loadingDiv.style.display = 'flex';
-      let rawHtml = sourceHtmlArea.value.trim();
-      const secret = secretKeyInput.value.trim();
-      
-      if (!rawHtml) {
-        showTip('请粘贴HTML代码', 'warning');
-        loadingDiv.style.display = 'none';
-        return null;
-      }
-      if (!secret || secret.length < 8) {
-        showTip('密钥至少8位', 'warning');
-        loadingDiv.style.display = 'none';
-        return null;
-      }
-      
-      try {
-        addLog('🔒 开始 AES-256 加密流程...');
-        const encryptedCipher = aesEncrypt(rawHtml, secret);
-        addLog(`AES 加密完成`);
-        const finalPayload = stringToBase64(encryptedCipher);
-        addLog(`Base64 编码完成`);
-        const integrityHash = CryptoJS.MD5(rawHtml).toString();
-        addLog(`防篡改哈希: ${integrityHash.substring(0,16)}...`);
+    
+    function updatePreviewStats() {
+        if (originalDataRows.length) previewStatsSpan.innerHTML = `${originalDataRows.length}行 × ${totalColumns}列 | 表头:${originalHeaderRows.length}行`;
+        else previewStatsSpan.innerHTML = `未加载数据`;
+    }
+    
+    function clearSplitResultsUI() {
+        splitGroups = [];
+        resultTabs.innerHTML = '';
+        resultTableContainer.innerHTML = '<div class="empty-placeholder">执行拆分后，分组结果将显示在此处</div>';
+    }
+    
+    // ========== 执行拆分 ==========
+    function performSplit() {
+        if (!originalDataRows.length) { alert("请先上传有效文件"); return; }
+        let selectedSplitColIndex = null;
+        const radios = splitColumnsDiv.querySelectorAll('input[name="splitBaseColumn"]');
+        for(let rb of radios) if(rb.checked) { selectedSplitColIndex = parseInt(rb.value,10); break; }
+        if(selectedSplitColIndex === null) { alert("请选择拆分依据列"); return; }
         
-        const protectedHtml = buildSecurePageWithAuth(finalPayload, integrityHash, secret);
-        loadingDiv.style.display = 'none';
-        showTip('✅ AES加密 + 混淆防护页生成成功！', 'success');
-        addLog('✅ 生成完成，解密器已混淆');
-        return protectedHtml;
-      } catch (err) {
-        loadingDiv.style.display = 'none';
-        addLog(`❌ 失败: ${err.message}`);
-        showTip('生成错误: ' + err.message, 'error');
-        return null;
-      }
-    }
-
-    function onGenerate() {
-      const finalCode = generateUltimateProtected();
-      if(finalCode) {
-        resultContainer.textContent = finalCode;
-        resultContainer.setAttribute('data-last', finalCode);
-      } else {
-        resultContainer.textContent = '生成失败，请检查密钥或HTML代码';
-      }
-    }
-    
-    function onCopy() {
-      let code = resultContainer.textContent;
-      if(!code || code === '等待生成...' || code.includes('生成失败')) {
-        showTip('请先生成防护页', 'warning');
-        return;
-      }
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(code).then(() => { 
-            showTip('复制成功', 'success'); 
-            addLog('复制加密代码');
-          }).catch(()=>fallbackCopy(code));
-        } else fallbackCopy(code);
-      } catch(e){ fallbackCopy(code); }
+        let exportColIndexes = [];
+        const exportCbs = exportColumnsDiv.querySelectorAll('input[type="checkbox"]');
+        for(let cb of exportCbs) if(cb.checked && cb.value !== "on") { 
+            let idx = parseInt(cb.value,10); 
+            if(!isNaN(idx)) exportColIndexes.push(idx); 
+        }
+        if(exportColIndexes.length === 0) { alert("请至少选择一列导出"); return; }
+        
+        const groupsMap = new Map();
+        for (const row of originalDataRows) {
+            let rawVal = (selectedSplitColIndex < row.length) ? row[selectedSplitColIndex] : "";
+            let key = (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== "") ? String(rawVal) : "(空值)";
+            if(!groupsMap.has(key)) groupsMap.set(key, []);
+            groupsMap.get(key).push([...row]);
+        }
+        if(groupsMap.size === 0) { alert("所选拆分列无有效分组"); return; }
+        
+        const groups = [];
+        const splitColDisplay = firstRowNames[selectedSplitColIndex] || `列_${selectedSplitColIndex+1}`;
+        for(let [groupVal, rows] of groupsMap.entries()) {
+            const filteredRows = rows.map(row => exportColIndexes.map(idx => idx < row.length ? row[idx] : ""));
+            const filteredHeaderRows = originalHeaderRows.map(headerRow => exportColIndexes.map(idx => idx < headerRow.length ? headerRow[idx] : ""));
+            groups.push({
+                groupKey: groupVal,
+                splitColumn: splitColDisplay,
+                headerRows: filteredHeaderRows,
+                dataRows: filteredRows,
+                headerRowCount: filteredHeaderRows.length
+            });
+        }
+        groups.sort((a,b) => String(a.groupKey).localeCompare(String(b.groupKey)));
+        splitGroups = groups;
+        renderSplitPreview();
     }
     
-    function fallbackCopy(t){
-      const ta = document.createElement('textarea');
-      ta.value = t;
-      ta.style.position='fixed'; 
-      ta.style.left='-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(ta);
-      showTip(ok ? '复制成功' : '复制失败', ok?'success':'error');
-      if(ok) addLog('复制成功');
+    function renderSplitPreview() {
+        if(!splitGroups.length) return;
+        resultTabs.innerHTML = "";
+        splitGroups.forEach((grp, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `tab-btn ${idx === 0 ? 'active' : ''}`;
+            let shortName = grp.groupKey.length > 24 ? grp.groupKey.substring(0,22)+".." : grp.groupKey;
+            btn.innerText = `${shortName} (${grp.dataRows.length}行)`;
+            btn.dataset.idx = idx;
+            btn.addEventListener('click', () => setActiveTab(idx));
+            resultTabs.appendChild(btn);
+        });
+        displayGroupTable(0);
     }
     
-    function onDownload(){
-      let code = resultContainer.textContent;
-      if(!code || code === '等待生成...' || code.includes('生成失败')) { 
-        showTip('无有效代码','warning'); 
-        return; 
-      }
-      const blob = new Blob(['\uFEFF' + code], {type: 'text/html;charset=utf-8'});
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = `aes_protected_${Date.now()}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showTip('下载成功！打开后需输入密钥', 'success');
-      addLog('下载受保护文件');
+    function setActiveTab(index) {
+        const btns = resultTabs.querySelectorAll('.tab-btn');
+        btns.forEach((btn,i) => i===index ? btn.classList.add('active') : btn.classList.remove('active'));
+        displayGroupTable(index);
     }
     
-    function onClear(){
-      if(confirm('重置所有内容？')) {
-        sourceHtmlArea.value = defaultHtmlSample;
-        secretKeyInput.value = "13529080202";
-        resultContainer.textContent = '等待生成...';
-        logContainer.innerHTML = '[系统] 已重置\n';
-        addLog('重置完成');
-        showTip('已恢复默认', 'warning');
-      }
+    function displayGroupTable(groupIdx) {
+        const group = splitGroups[groupIdx];
+        if(!group) return;
+        const allRows = [...group.headerRows, ...group.dataRows];
+        const maxCols = Math.max(...allRows.map(r => r.length), 1);
+        let html = '<table class="data-table">';
+        for(let i=0; i<allRows.length; i++) {
+            const row = allRows[i];
+            if(i === 0) {
+                html += '<thead><tr>';
+                for(let c=0; c<maxCols; c++) {
+                    let val = c < row.length ? row[c] : "";
+                    html += `<th>${escapeHtml(String(val))}</th>`;
+                }
+                html += '</tr></thead><tbody>';
+            } else {
+                html += '<tr>';
+                for(let c=0; c<maxCols; c++) {
+                    let val = c < row.length ? row[c] : "";
+                    html += `<td>${escapeHtml(String(val))}</td>`;
+                }
+                html += '</tr>';
+            }
+        }
+        html += '</tbody></table>';
+        resultTableContainer.innerHTML = html;
     }
     
-    function toggleTheme(){
-      const isDark = document.body.getAttribute('data-theme') === 'dark';
-      if(isDark) { 
-        document.body.removeAttribute('data-theme'); 
-        themeToggle.textContent = '🌙 深色模式'; 
-        addLog('浅色模式'); 
-      } else { 
-        document.body.setAttribute('data-theme','dark'); 
-        themeToggle.textContent = '☀️ 浅色模式'; 
-        addLog('深色模式'); 
-      }
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
+    // 导出结果
+    async function exportResult() {
+        if(!splitGroups.length) { alert("没有拆分结果，请先执行拆分"); return; }
+        const outputType = document.querySelector('input[name="outputType"]:checked').value;
+        if(outputType === "files") {
+            const zip = new JSZip();
+            for(let i=0; i<splitGroups.length; i++) {
+                const grp = splitGroups[i];
+                const sheetData = [...grp.headerRows, ...grp.dataRows];
+                const ws = XLSX.utils.aoa_to_sheet(sheetData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                let safeName = grp.groupKey.replace(/[\\/:*?"<>|]/g, '_').substring(0,50);
+                if(!safeName) safeName = "group";
+                zip.file(`${safeName}.xlsx`, wbOut);
+            }
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a'); link.href = URL.createObjectURL(content);
+            link.download = `拆分结果_${splitGroups.length}组.zip`; link.click(); URL.revokeObjectURL(link.href);
+        } else {
+            const newWorkbook = XLSX.utils.book_new();
+            for(let i=0; i<splitGroups.length; i++) {
+                const grp = splitGroups[i];
+                const sheetData = [...grp.headerRows, ...grp.dataRows];
+                const ws = XLSX.utils.aoa_to_sheet(sheetData);
+                let sheetName = grp.groupKey.length > 28 ? grp.groupKey.slice(0,28) : grp.groupKey;
+                sheetName = sheetName.replace(/[\\/*?:\[\]]/g, '_');
+                if(!sheetName) sheetName = `Sheet_${i+1}`;
+                XLSX.utils.book_append_sheet(newWorkbook, ws, sheetName);
+            }
+            XLSX.writeFile(newWorkbook, `多Sheet拆分_${new Date().toISOString().slice(0,19)}.xlsx`);
+        }
     }
     
-    genBtn.addEventListener('click', onGenerate);
-    copyBtn.addEventListener('click', onCopy);
-    downloadBtn.addEventListener('click', onDownload);
-    clearBtn.addEventListener('click', onClear);
-    themeToggle.addEventListener('click', toggleTheme);
-    addLog('AES+混淆引擎已启动 | 左右双栏布局，左侧编辑右侧预览');
-  })();
+    function fullReset() {
+        rawFileBuffer = null; currentFileName = "";
+        originalHeaderRows = []; originalDataRows = []; firstRowNames = []; totalColumns = 0; splitGroups = [];
+        fileInfoDiv.innerHTML = "";
+        splitColumnsDiv.innerHTML = "<span style='color:#94a3b8; font-size:0.7rem;'>等待上传文件后加载列</span>";
+        exportColumnsDiv.innerHTML = "<span style='color:#94a3b8; font-size:0.7rem;'>等待上传文件后加载列</span>";
+        splitExecuteBtn.disabled = true;
+        previewStatsSpan.innerHTML = "未加载数据";
+        clearSplitResultsUI();
+        fileInput.value = "";
+    }
+    
+    // 事件绑定
+    selectFileBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+    uploadZone.addEventListener('click', (e) => { if(e.target === selectFileBtn || selectFileBtn.contains(e.target)) return; fileInput.click(); });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('drag-over'); });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault(); uploadZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if(files.length && /\.(xlsx|xls|xlsm)$/i.test(files[0].name)) loadFile(files[0]);
+        else if(files.length) alert("请拖拽Excel文件");
+    });
+    fileInput.addEventListener('change', (e) => { if(e.target.files.length) loadFile(e.target.files[0]); fileInput.value = ''; });
+    splitExecuteBtn.addEventListener('click', performSplit);
+    resetAllBtn.addEventListener('click', fullReset);
+    batchDownloadBtn.addEventListener('click', exportResult);
+    headerRowsCountInput.addEventListener('change', () => { if(rawFileBuffer) reloadWithCurrentHeaderRows(); });
+    fullReset();
 </script>
 </body>
 </html>
